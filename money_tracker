@@ -1,0 +1,196 @@
+import datetime
+import time
+
+my_wallet = {
+    'money_left': 0.0,
+    'limit': 0.0,
+    'history': []
+}
+
+def show_bar(spent, total):
+    if total <= 0:
+        return "[ no limit set ]"
+    
+    perc = (spent / total) * 100
+    
+    if perc > 100:
+        perc = 100
+        
+    done = int(perc / 5) 
+    left = 20 - done
+    
+    b = "[" + ("#" * done) + ("-" * left) + "]"
+    
+    return b + " " + str(round(perc, 1)) + "%"
+
+def setup_budget():
+    print("\n--- Budget Setup ---")
+    while True:
+        try:
+            amt = float(input('How much can you spend this month? $'))
+            
+            if amt <= 0:
+                print("must be more than 0")
+            else:
+                my_wallet['limit'] = amt
+                print("ok, limit is $" + str(amt))
+                break
+                
+        except:
+            print("enter a number plz")
+            print("try again")
+
+def get_paid():
+    print("\n--- Got Money ---")
+    try:
+        cash = float(input("How much? $"))
+        
+        if cash < 1:
+            print("too low")
+            return
+            
+        from_where = input("Who paid you? ")
+        day = datetime.date.today().strftime("%b %d, %Y")
+        
+        entry = {
+            "kind": "in",
+            "cash": cash,
+            "name": from_where,
+            "day": day
+        }
+        
+        my_wallet['history'].append(entry)
+        my_wallet['money_left'] = my_wallet['money_left'] + cash
+        
+        print("nice! added $" + str(cash))
+        
+    except:
+        print("that is not a number")
+
+def buy_stuff():
+    print("\n--- Spent Money ---")
+    try:
+        cost = float(input("How much did it cost? $"))
+        
+        if cost <= 0:
+            print("error")
+            return
+            
+        what = input("What did you buy? ")
+        day = datetime.date.today().strftime("%b %d, %Y")
+        
+        item = {
+            'kind': 'out',
+            'cash': cost,
+            'name': what,
+            'day': day
+        }
+        
+        my_wallet['history'].append(item)
+        my_wallet['money_left'] = my_wallet['money_left'] - cost
+        
+        print("subtracted $" + str(cost) + " for " + what)
+        
+        limit = my_wallet['limit']
+        if limit > 0:
+            total_spent = 0
+            
+            for x in my_wallet['history']:
+                if x['kind'] == 'out':
+                    total_spent = total_spent + x['cash']
+            
+            if total_spent > limit:
+                print("BROKE THE BUDGET! over by $" + str(total_spent - limit))
+            elif total_spent > (limit * 0.8):
+                print("careful u are almost out of budget")
+                
+    except:
+        print("wrong input type")
+
+def see_history():
+    print("\n====================")
+    print("     HISTORY")
+    print("====================")
+    
+    if len(my_wallet['history']) == 0:
+        print("nothing here yet")
+        return
+        
+    count = 1
+    for item in my_wallet['history']:
+        if item['kind'] == 'in':
+            print(str(count) + ". " + item['day'] + " | EARNED: +$" + str(item['cash']) + " from " + item['name'])
+        else:
+            print(str(count) + ". " + item['day'] + " | SPENT: -$" + str(item['cash']) + " on " + item['name'])
+            
+        count = count + 1
+        
+    print("--------------------")
+    print("BALANCE: $" + str(my_wallet['money_left']))
+
+def show_stats():
+    in_money = 0
+    out_money = 0
+    
+    for x in my_wallet['history']:
+        if x['kind'] == 'in':
+            in_money = in_money + x['cash']
+        if x['kind'] == 'out':
+            out_money = out_money + x['cash']
+            
+    print("\n--- STATS ---")
+    print("Total in: $" + str(in_money))
+    print("Total out: $" + str(out_money))
+    print("Left: $" + str(my_wallet['money_left']))
+    
+    if my_wallet['limit'] > 0:
+        print("\nBudget:")
+        print(show_bar(out_money, my_wallet['limit']))
+        print("Spent $" + str(out_money) + " of $" + str(my_wallet['limit']))
+
+def reset_everything():
+    print("are you sure? type yes or no")
+    ans = input("> ")
+    if ans == "yes":
+        my_wallet['money_left'] = 0.0
+        my_wallet['limit'] = 0.0
+        my_wallet['history'] = []
+        print("everything deleted")
+    else:
+        print("nvm then")
+
+print("Money Tracker 3000")
+print("try not to go broke")
+print("")
+
+while True:
+    print("\nMenu:")
+    print("1 - set limit")
+    print("2 - got money")
+    print("3 - bought something")
+    print("4 - history")
+    print("5 - stats")
+    print("6 - clear all data")
+    print("7 - exit")
+    
+    choice = input("pick (1-7): ")
+    
+    if choice == "1":
+        setup_budget()
+    elif choice == "2":
+        get_paid()
+    elif choice == '3':
+        buy_stuff()
+    elif choice == "4":
+        see_history()
+    elif choice == "5":
+        show_stats()
+    elif choice == "6":
+        reset_everything()
+    elif choice == "7":
+        print("bye")
+        break
+    else:
+        print("bad choice")
+        
+    time.sleep(0.3)
